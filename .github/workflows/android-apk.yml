@@ -66,9 +66,6 @@ jobs:
           }
           EOF
 
-          echo "Capacitor JSON configuration created:"
-          cat capacitor.config.json
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -94,11 +91,11 @@ jobs:
       - name: Sync Capacitor
         run: npx cap sync android
 
-      - name: Setup Java 17
+      - name: Setup Java 21
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: '21'
 
       - name: Build debug APK
         working-directory: android

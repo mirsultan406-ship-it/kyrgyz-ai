@@ -8,6 +8,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -16,11 +17,15 @@ jobs:
         shell: bash
         run: |
           set -e
+
           ZIP="$(find . -maxdepth 1 -type f -iname '*.zip' | head -n 1)"
           test -n "$ZIP"
+
           rm -rf extracted
           mkdir extracted
+
           unzip -q "$ZIP" -d extracted
+
           if [ -f extracted/package.json ]; then
             cp -a extracted/. ./
           else
@@ -34,12 +39,16 @@ jobs:
         run: |
           python3 - <<'PY'
           from pathlib import Path
+
           p = Path("src/main.tsx")
           s = p.read_text(encoding="utf-8")
+
           old = "});return()=>map.remove()},[mapOpen"
           new = "}));return()=>map.remove()},[mapOpen"
+
           if old not in s:
               raise SystemExit("Expected source pattern was not found.")
+
           p.write_text(s.replace(old, new, 1), encoding="utf-8")
           print("Source syntax fixed.")
           PY
@@ -47,17 +56,18 @@ jobs:
       - name: Fix Capacitor configuration
         shell: bash
         run: |
-          cat > capacitor.config.ts <<'EOF2'
-          import type { CapacitorConfig } from '@capacitor/cli';
+          rm -f capacitor.config.ts
 
-          const config: CapacitorConfig = {
-            appId: 'com.kyrgyzai.app',
-            appName: 'Kyrgyz AI',
-            webDir: 'dist'
-          };
+          cat > capacitor.config.json <<'EOF'
+          {
+            "appId": "com.kyrgyzai.app",
+            "appName": "Kyrgyz AI",
+            "webDir": "dist"
+          }
+          EOF
 
-          export default config;
-          EOF2
+          echo "Capacitor JSON configuration created:"
+          cat capacitor.config.json
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -66,14 +76,20 @@ jobs:
 
       - name: Install dependencies
         run: |
-          if [ -f package-lock.json ]; then npm ci; else npm install; fi
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
 
       - name: Build web app
         run: npm run build
 
       - name: Add Android platform
         run: |
-          if [ ! -d android ]; then npx cap add android; fi
+          if [ ! -d android ]; then
+            npx cap add android
+          fi
 
       - name: Sync Capacitor
         run: npx cap sync android

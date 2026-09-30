@@ -29,6 +29,21 @@ jobs:
             cp -a "$DIR"/. ./
           fi
 
+      - name: Fix source syntax
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("src/main.tsx")
+          s = p.read_text(encoding="utf-8")
+          old = "});return()=>map.remove()},[mapOpen"
+          new = "}));return()=>map.remove()},[mapOpen"
+          if old not in s:
+              raise SystemExit("Expected source pattern was not found.")
+          p.write_text(s.replace(old, new, 1), encoding="utf-8")
+          print("Source syntax fixed.")
+          PY
+
       - name: Fix Capacitor configuration
         shell: bash
         run: |
